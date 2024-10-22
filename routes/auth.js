@@ -97,7 +97,7 @@ router.patch('/update/name',authMidlleware,async (req,res)=>{
             { $set: { name } }
           );
       
-          res.status(200).json({message:"name ad set successfully"});
+          res.status(200).json({message:"name set successfully"});
       
         }
         catch(error){
