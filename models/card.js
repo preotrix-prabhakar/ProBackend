@@ -1,7 +1,17 @@
 const mongoose=require("mongoose");
 const Schema=mongoose.Schema;
-const taskSchema=require("./task");
+// const taskSchema=require("./task");
 
+const taskSchema=new Schema({
+    desc:{
+        type:String,
+        required:true,
+    },
+    isChecked:{
+        type:Boolean,
+        default: false,
+    },
+})
 const cardSchema = new Schema({
     title: {
       type: String,
@@ -32,9 +42,9 @@ const cardSchema = new Schema({
       type: Date,
       default: Date.now(),
     },
-  
-  
   });
   
-  module.exports = mongoose.model('card', cardSchema);
-  
+module.exports = {
+    Card: mongoose.model('Card', cardSchema), 
+    Task: mongoose.model('Task', taskSchema)
+};
