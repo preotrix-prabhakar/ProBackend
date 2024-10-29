@@ -13,8 +13,11 @@ router.get('/',(req,res)=>{
 router.post('/register',async (req,res)=>{
     const {email,name,password}=req.body;
     if(!email || !password || !name){
-        console.log(`enter all fileds`);
+        console.log(`enter all fileds this`);
     }
+    // if(confirmPassword!=password){
+    //     return res.status(400).json({message:`password and confirm password can't be different`})
+    // }
     console.log(email);
     let already=await userModel.findOne({email:email});
     if(already){
@@ -23,11 +26,11 @@ router.post('/register',async (req,res)=>{
     }
 
     const hashedPassword= await bcrypt.hash(password,10);
-    const newUser=new userModel({   
+    const newUser=new userModel({  
         name:name, 
         email:email,
-        // password:password,
-        password:hashedPassword
+        password:hashedPassword,
+        confirmPassword:password
     })
     const user=await newUser.save()
     res.status(200).json({user});
