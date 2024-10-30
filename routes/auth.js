@@ -6,18 +6,17 @@ const dotenv=require("dotenv");
 const router=express.Router()
 const authMidlleware=require("../middleware/auth")
 dotenv.config();
-
+const jwtKey=process.env.SECRET_KEY;
 router.get('/',(req,res)=>{
-    res.json("hello");
+    res.json("hello from backend");
 })
+
 router.post('/register',async (req,res)=>{
+try {
     const {email,name,password}=req.body;
     if(!email || !password || !name){
-        console.log(`enter all fileds this`);
+        console.log(`enter all fileds`);
     }
-    // if(confirmPassword!=password){
-    //     return res.status(400).json({message:`password and confirm password can't be different`})
-    // }
     console.log(email);
     let already=await userModel.findOne({email:email});
     if(already){
@@ -30,13 +29,16 @@ router.post('/register',async (req,res)=>{
         name:name, 
         email:email,
         password:hashedPassword,
-        confirmPassword:password
     })
     const user=await newUser.save()
     res.status(200).json({user});
-    console.log(user); 
- 
+    let token=await jwt.sign({userId: user._id},jwtKey);
+    res.status(200).json({name:user.name,jwt:token});
+} catch (error) {
+    console.log(error);
+}
 })
+
 router.get('/checkRoute', authMidlleware, (req, res) => {
     res.json({ message: "This is a protected route",  user: {
         id: req.user.id,
@@ -44,24 +46,30 @@ router.get('/checkRoute', authMidlleware, (req, res) => {
     }});
 }); 
 router.post('/login',async (req,res)=>{
-    const {email,password}=req.body;
+    try {
+        const {email,password}=req.body;
     if(!(email || password)){return res.status(400).json({message:`both fields are necessary`})}
+    
     const user=await userModel.findOne({email:email});
     if(!user){
-        return res.status(400).json({message:`user not found`});
+        return res.status(400).json({message:`invalid credentials`});
     }
     let validPass=await bcrypt.compare(password,user.password);
 
     if(!validPass){
         res.status(401).json({message:`invalid credentials`});
     }
-    let token = await jwt.sign({id: user.id}, process.env.SECRET_KEY);
+    let token = await jwt.sign({id: user.id}, jwtKey);
     res.header('Authorization', `Bearer ${token}`).json({
         message: 'Logged in successfully',
         token: token
     });
     console.log(validPass);
     console.log(token);
+    } catch (error) {
+    console.log(error);
+    }
+    
 }) 
 router.patch('/update/password',authMidlleware,async (req,res)=>{
     try {
