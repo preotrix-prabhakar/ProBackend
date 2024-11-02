@@ -1,6 +1,5 @@
 const mongoose=require("mongoose");
 const Schema=mongoose.Schema;
-// const taskSchema=require("./task");
 
 const taskSchema=new Schema({
     desc:{

@@ -11,33 +11,54 @@ router.get('/',(req,res)=>{
     res.json("hello from backend");
 })
 
-router.post('/register',async (req,res)=>{
-try {
-    const {email,name,password}=req.body;
-    if(!email || !password || !name){
-        console.log(`enter all fileds`);
-    }
-    console.log(email);
-    let already=await userModel.findOne({email:email});
-    if(already){
-        console.log(`user already exists`);
-        res.status(400).json({message:`user alreasy exists`});
-    }
+router.post('/register', async (req, res) => {
+    try {
+        const { email, name, password } = req.body;
 
-    const hashedPassword= await bcrypt.hash(password,10);
-    const newUser=new userModel({  
-        name:name, 
-        email:email,
-        password:hashedPassword,
-    })
-    const user=await newUser.save()
-    res.status(200).json({user});
-    let token=await jwt.sign({userId: user._id},jwtKey);
-    res.status(200).json({name:user.name,jwt:token});
-} catch (error) {
-    console.log(error);
-}
-})
+        // const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        if (!email || !password || !name) {
+            console.log(`Enter all fields`);
+            return res.status(400).json({ message: 'Please enter all required fields.' });
+        }
+
+        // if (!emailPattern.test(email)) {
+        //     console.log(`Invalid email format`);
+        //     return res.status(400).json({ message: 'Invalid email format.' });
+        // }
+
+        let already = await userModel.findOne({ email: email });
+        if (already) {
+            console.log(`User already exists`);
+            return res.status(400).json({ message: `User already exists` });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new userModel({
+            name: name,
+            email: email,
+            password: hashedPassword,
+        });
+        const user = await newUser.save();
+        
+        let token = await jwt.sign({ userId: user._id }, jwtKey, { expiresIn: '1h' });
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email
+            },
+            token: token
+        });
+
+        console.log(user.name, token);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 router.get('/checkRoute', authMidlleware, (req, res) => {
     res.json({ message: "This is a protected route",  user: {
@@ -45,7 +66,7 @@ router.get('/checkRoute', authMidlleware, (req, res) => {
         email: req.user.email
     }});
 }); 
-router.post('/login',async (req,res)=>{
+router.post('/',async (req,res)=>{
     try {
         const {email,password}=req.body;
     if(!(email || password)){return res.status(400).json({message:`both fields are necessary`})}
@@ -118,4 +139,3 @@ router.patch('/update/name',authMidlleware,async (req,res)=>{
 })
 
 module.exports=router;
-// $2b$10$ul9F0I8Uf04rAMOymu75Ie4DZeld.mjxWwHKOpLa9r8ROn90cP6ca  
